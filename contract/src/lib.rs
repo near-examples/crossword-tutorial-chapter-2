@@ -3,10 +3,9 @@ use near_sdk::{
     borsh::{self, BorshDeserialize, BorshSerialize},
     log,
     serde::{Deserialize, Serialize},
-    Balance, PanicOnDefault
+    PanicOnDefault
 };
 use near_sdk::{env, near_bindgen};
-use near_sdk::AccountId;
 
 #[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
@@ -46,18 +45,14 @@ pub enum PuzzleStatus {
 #[serde(crate = "near_sdk::serde")]
 pub struct UnsolvedPuzzles {
     puzzles: Vec<JsonPuzzle>,
-    creator_account: AccountId,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonPuzzle {
     /// The human-readable public key that's the solution from the seed phrase
-    solution_public_key: String,
+    solution_hash: String,
     status: PuzzleStatus,
-    reward: Balance,
-    creator: AccountId,
-    dimensions: CoordinatePair,
     answer: Vec<Answer>,
 }
 
@@ -158,6 +153,26 @@ impl Crossword {
 
         assert!(existing.is_none(), "Puzzle with that key already exists");
         self.unsolved_puzzles.insert(&solution_hash);
+    }
+
+    pub fn get_unsolved_puzzles(&self) -> UnsolvedPuzzles {
+        let solution_hashes = self.unsolved_puzzles.to_vec();
+        let mut all_unsolved_puzzles = vec![];
+        for hash in solution_hashes {
+            let puzzle = self
+                .puzzles
+                .get(&hash)
+                .unwrap_or_else(|| env::panic_str("ERR_LOADING_PUZZLE"));
+            let json_puzzle = JsonPuzzle {
+                solution_hash: hash,
+                status: puzzle.status,
+                answer: puzzle.answer,
+            };
+            all_unsolved_puzzles.push(json_puzzle)
+        }
+        UnsolvedPuzzles {
+            puzzles: all_unsolved_puzzles,
+        }
     }
 }
 
