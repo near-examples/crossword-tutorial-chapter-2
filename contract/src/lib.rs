@@ -97,8 +97,8 @@ impl Crossword {
             .get(&hashed_input_hex)
             .expect("ERR_NOT_CORRECT_ANSWER");
 
-        // Check if the puzzle is already solved. If it's unsolved, make batch action of
-        // removing that public key and adding the user's public key
+        // Check if the puzzle is already solved. If it's unsolved, set the status to solved,
+        //   then proceed to update the puzzle and pay the winner.
         puzzle.status = match puzzle.status {
             PuzzleStatus::Unsolved => PuzzleStatus::Solved { memo: memo.clone() },
             _ => {
