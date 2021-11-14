@@ -3,9 +3,12 @@ use near_sdk::{
     borsh::{self, BorshDeserialize, BorshSerialize},
     log,
     serde::{Deserialize, Serialize},
-    PanicOnDefault
+    PanicOnDefault, Promise,
 };
 use near_sdk::{env, near_bindgen};
+
+// 5 Ⓝ in yoctoNEAR
+const PRIZE_AMOUNT: u128 = 5_000_000_000_000_000_000_000_000;
 
 #[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
@@ -50,7 +53,7 @@ pub struct UnsolvedPuzzles {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonPuzzle {
-    /// The human-readable public key that's the solution from the seed phrase
+    /// The human-readable (not in bytes) hash of the solution
     solution_hash: String,
     status: PuzzleStatus,
     answer: Vec<Answer>,
@@ -97,9 +100,7 @@ impl Crossword {
         // Check if the puzzle is already solved. If it's unsolved, make batch action of
         // removing that public key and adding the user's public key
         puzzle.status = match puzzle.status {
-            PuzzleStatus::Unsolved => PuzzleStatus::Solved {
-                memo: memo.clone()
-            },
+            PuzzleStatus::Unsolved => PuzzleStatus::Solved { memo: memo.clone() },
             _ => {
                 env::panic_str("ERR_PUZZLE_SOLVED");
             }
@@ -115,6 +116,9 @@ impl Crossword {
             hashed_input_hex,
             memo
         );
+
+        // Transfer the prize money to the winner
+        Promise::new(env::predecessor_account_id()).transfer(PRIZE_AMOUNT);
     }
 
     /// Get the hash of a crossword puzzle solution from the unsolved_puzzles
@@ -122,7 +126,7 @@ impl Crossword {
         let mut index = 0;
         for puzzle_hash in self.unsolved_puzzles.iter() {
             if puzzle_index == index {
-                return Some(puzzle_hash)
+                return Some(puzzle_hash);
             }
             index += 1;
         }
@@ -133,16 +137,12 @@ impl Crossword {
     pub fn get_puzzle_status(&self, solution_hash: String) -> Option<PuzzleStatus> {
         let puzzle = self.puzzles.get(&solution_hash);
         if puzzle.is_none() {
-            return None
+            return None;
         }
         Some(puzzle.unwrap().status)
     }
 
-    pub fn new_puzzle(
-        &mut self,
-        solution_hash: String,
-        answers: Vec<Answer>,
-    ) {
+    pub fn new_puzzle(&mut self, solution_hash: String, answers: Vec<Answer>) {
         let existing = self.puzzles.insert(
             &solution_hash,
             &Puzzle {
@@ -205,28 +205,28 @@ mod tests {
                 start: CoordinatePair { x: 2, y: 1 },
                 direction: AnswerDirection::Across,
                 length: 4,
-                clue: "Native token".to_string()
+                clue: "Native token".to_string(),
             },
             Answer {
                 num: 1,
                 start: CoordinatePair { x: 2, y: 1 },
                 direction: AnswerDirection::Down,
                 length: 7,
-                clue: "Name of the specs/standards site is ______.io".to_string()
+                clue: "Name of the specs/standards site is ______.io".to_string(),
             },
             Answer {
                 num: 2,
                 start: CoordinatePair { x: 5, y: 1 },
                 direction: AnswerDirection::Down,
                 length: 3,
-                clue: "DeFi site on NEAR is ___.finance".to_string()
+                clue: "DeFi site on NEAR is ___.finance".to_string(),
             },
             Answer {
                 num: 4,
                 start: CoordinatePair { x: 0, y: 7 },
                 direction: AnswerDirection::Across,
                 length: 7,
-                clue: "DeFi decentralizes this".to_string()
+                clue: "DeFi decentralizes this".to_string(),
             },
         ]
     }
@@ -256,7 +256,10 @@ mod tests {
         let mut contract = Crossword::new();
         // Add puzzle
         let answers = get_answers();
-        contract.new_puzzle("69c2feb084439956193f4c21936025f14a5a5a78979d67ae34762e18a7206a0f".to_string(), answers);
+        contract.new_puzzle(
+            "69c2feb084439956193f4c21936025f14a5a5a78979d67ae34762e18a7206a0f".to_string(),
+            answers,
+        );
         contract.submit_solution("wrong answer here".to_string(), "my memo".to_string());
     }
 
@@ -273,9 +276,15 @@ mod tests {
 
         // Add puzzle
         let answers = get_answers();
-        contract.new_puzzle("69c2feb084439956193f4c21936025f14a5a5a78979d67ae34762e18a7206a0f".to_string(), answers);
+        contract.new_puzzle(
+            "69c2feb084439956193f4c21936025f14a5a5a78979d67ae34762e18a7206a0f".to_string(),
+            answers,
+        );
 
-        contract.submit_solution("near nomicon ref finance".to_string(), "my memo".to_string());
+        contract.submit_solution(
+            "near nomicon ref finance".to_string(),
+            "my memo".to_string(),
+        );
 
         // Ensure the puzzle status is now Solved
         // contract.get_puzzle_status("69c2feb084439956193f4c21936025f14a5a5a78979d67ae34762e18a7206a0f".to_string());
