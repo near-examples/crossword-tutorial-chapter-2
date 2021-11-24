@@ -145,6 +145,11 @@ impl Crossword {
     }
 
     pub fn new_puzzle(&mut self, solution_hash: String, answers: Vec<Answer>) {
+        assert_eq!(
+            env::predecessor_account_id(),
+            self.owner_id,
+            "Only the owner may call this method"
+        );
         let existing = self.puzzles.insert(
             &solution_hash,
             &Puzzle {
