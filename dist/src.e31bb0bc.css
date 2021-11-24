@@ -70,8 +70,12 @@ span.important {
     margin: .5em;
 }
 
-#page h1, #page.no-puzzles {
+#page h1, #page .no-puzzles {
     text-align: center;
+}
+
+#page .no-puzzles .cli-command {
+    text-align: left;
 }
 
 #page.claim {

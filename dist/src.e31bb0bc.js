@@ -50513,11 +50513,91 @@ function parseSolutionSeedPhrase(data, gridData) {
 */
 
 
+function mungeBlockchainCrossword(chainData) {
+  const data = {
+    across: {},
+    down: {}
+  }; // Assume there is only one crossword puzzle, get the first
+
+  const crosswordClues = chainData[0].answer;
+  crosswordClues.forEach(clue => {
+    // In the smart contract it's stored as "Across" but the
+    // React library uses "across"
+    const direction = clue.direction.toLowerCase();
+    data[direction][clue.num] = {};
+    data[direction][clue.num]['clue'] = clue.clue;
+    data[direction][clue.num]['answer'] = '?'.repeat(clue.length);
+    data[direction][clue.num]['row'] = clue.start.y;
+    data[direction][clue.num]['col'] = clue.start.x;
+  });
+  return data;
+}
+
 module.exports = {
   viewMethodOnContract,
-  parseSolutionSeedPhrase
+  parseSolutionSeedPhrase,
+  mungeBlockchainCrossword
 };
-},{"near-api-js":"../node_modules/near-api-js/lib/browser-index.js","bs58":"../node_modules/bs58/index.js","buffer":"../node_modules/buffer/index.js"}],"App.js":[function(require,module,exports) {
+},{"near-api-js":"../node_modules/near-api-js/lib/browser-index.js","bs58":"../node_modules/bs58/index.js","buffer":"../node_modules/buffer/index.js"}],"near-cli-command.js":[function(require,module,exports) {
+const nearCLICommand = `
+      near call crossword.friend.testnet new_puzzle '{
+        "solution_hash": "d1a5cf9ad1adefe0528f7d31866cf901e665745ff172b96892693769ad284010",
+        "answers": [
+      {
+        "num": 1,
+        "start": {
+        "x": 1,
+        "y": 1
+      },
+        "direction": "Down",
+        "length": 5,
+        "clue": "NFT market on NEAR that specializes in cards and comics."
+      },
+      {
+        "num": 2,
+        "start": {
+        "x": 0,
+        "y": 2
+      },
+        "direction": "Across",
+        "length": 13,
+        "clue": "You can move assets between NEAR and different chains, including Ethereum, by visiting ______.app"
+      },
+      {
+        "num": 3,
+        "start": {
+        "x": 9,
+        "y": 1
+      },
+        "direction": "Down",
+        "length": 8,
+        "clue": "NFT market on NEAR with art, physical items, tickets, and more."
+      },
+      {
+        "num": 4,
+        "start": {
+        "x": 3,
+        "y": 8
+      },
+        "direction": "Across",
+        "length": 9,
+        "clue": "The smallest denomination of the native token on NEAR."
+      },
+      {
+        "num": 5,
+        "start": {
+        "x": 5,
+        "y": 8
+      },
+        "direction": "Down",
+        "length": 3,
+        "clue": "You typically deploy a smart contract with the NEAR ___ tool."
+      }
+        ]
+      }' --accountId crossword.friend.testnet    
+    `;
+module.exports = nearCLICommand;
+},{}],"App.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -50532,6 +50612,8 @@ var _react = _interopRequireWildcard(require("react"));
 var _reactCrosswordNear = _interopRequireDefault(require("react-crossword-near"));
 
 var _utils = require("./utils");
+
+var _nearCliCommand = _interopRequireDefault(require("./near-cli-command"));
 
 var _util = require("react-crossword-near/dist/es/util");
 
@@ -50573,24 +50655,40 @@ const App = ({
     }
   }
 
-  return /*#__PURE__*/_react.default.createElement("div", {
-    id: "page"
-  }, /*#__PURE__*/_react.default.createElement("h1", null, "NEAR Crossword Puzzle"), /*#__PURE__*/_react.default.createElement("div", {
-    id: "crossword-wrapper"
-  }, /*#__PURE__*/_react.default.createElement("h3", null, "Status: ", solutionFound), /*#__PURE__*/_react.default.createElement(_reactCrosswordNear.default, {
-    data: data,
-    ref: crossword,
-    onCrosswordComplete: onCrosswordComplete
-  }), /*#__PURE__*/_react.default.createElement("p", null, "Thank you ", /*#__PURE__*/_react.default.createElement("a", {
-    href: "https://github.com/JaredReisinger/react-crossword",
-    target: "_blank",
-    rel: "noreferrer"
-  }, "@jaredreisinger/react-crossword"), "!")));
+  if (solutionHash) {
+    // A solution hash was found, meaning there's a crossword puzzle to solve
+    return /*#__PURE__*/_react.default.createElement("div", {
+      id: "page"
+    }, /*#__PURE__*/_react.default.createElement("h1", null, "NEAR Crossword Puzzle"), /*#__PURE__*/_react.default.createElement("div", {
+      id: "crossword-wrapper"
+    }, /*#__PURE__*/_react.default.createElement("h3", null, "Status: ", solutionFound), /*#__PURE__*/_react.default.createElement(_reactCrosswordNear.default, {
+      data: data,
+      ref: crossword,
+      onCrosswordComplete: onCrosswordComplete
+    }), /*#__PURE__*/_react.default.createElement("p", null, "Thank you ", /*#__PURE__*/_react.default.createElement("a", {
+      href: "https://github.com/JaredReisinger/react-crossword",
+      target: "_blank",
+      rel: "noreferrer"
+    }, "@jaredreisinger/react-crossword"), "!")));
+  } else {
+    // No solution hash was found, let the user know
+    return /*#__PURE__*/_react.default.createElement("div", {
+      id: "page"
+    }, /*#__PURE__*/_react.default.createElement("h1", null, "NEAR Crossword Puzzle"), /*#__PURE__*/_react.default.createElement("div", {
+      id: "crossword-wrapper",
+      className: "no-puzzles"
+    }, /*#__PURE__*/_react.default.createElement("h2", null, "No puzzles to solve :)"), /*#__PURE__*/_react.default.createElement("p", null, "Sorry, no puzzles to solve."), /*#__PURE__*/_react.default.createElement("p", null, "If you are the developer and are surprised to see this, perhaps you'll want to add a puzzle:"), /*#__PURE__*/_react.default.createElement("p", null, "With ", /*#__PURE__*/_react.default.createElement("a", {
+      href: "https://docs.near.org/docs/tools/near-cli#installation",
+      target: "_blank"
+    }, "NEAR CLI"), ":"), /*#__PURE__*/_react.default.createElement("div", {
+      className: "cli-command"
+    }, /*#__PURE__*/_react.default.createElement("code", null, _nearCliCommand.default))));
+  }
 };
 
 var _default = App;
 exports.default = _default;
-},{"./App.css":"App.css","react":"../node_modules/react/index.js","react-crossword-near":"../node_modules/react-crossword-near/dist/es/index.js","./utils":"utils.js","react-crossword-near/dist/es/util":"../node_modules/react-crossword-near/dist/es/util.js","js-sha256":"../node_modules/js-sha256/src/sha256.js"}],"config.js":[function(require,module,exports) {
+},{"./App.css":"App.css","react":"../node_modules/react/index.js","react-crossword-near":"../node_modules/react-crossword-near/dist/es/index.js","./utils":"utils.js","./near-cli-command":"near-cli-command.js","react-crossword-near/dist/es/util":"../node_modules/react-crossword-near/dist/es/util.js","js-sha256":"../node_modules/js-sha256/src/sha256.js"}],"config.js":[function(require,module,exports) {
 const CONTRACT_NAME = "xword.demo.testnet" || 'your-crossword-account.testnet';
 
 function getConfig(env) {
@@ -50656,44 +50754,6 @@ function getConfig(env) {
 }
 
 module.exports = getConfig;
-},{}],"hardcoded-data.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.data = void 0;
-const data = {
-  across: {
-    1: {
-      clue: 'Native token',
-      answer: '????',
-      row: 1,
-      col: 2
-    },
-    3: {
-      clue: 'DeFi decentralizes this',
-      answer: '???????',
-      row: 7,
-      col: 0
-    }
-  },
-  down: {
-    1: {
-      clue: 'Name of the spec/standards site is _______.io',
-      answer: '???????',
-      row: 1,
-      col: 2
-    },
-    2: {
-      clue: 'DeFi site on NEAR is ___.finance',
-      answer: '???',
-      row: 1,
-      col: 5
-    }
-  }
-};
-exports.data = data;
 },{}],"index.js":[function(require,module,exports) {
 "use strict";
 
@@ -50707,15 +50767,23 @@ var _config = _interopRequireDefault(require("./config.js"));
 
 var _utils = require("./utils");
 
-var _hardcodedData = require("./hardcoded-data");
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 async function initCrossword() {
   const nearConfig = (0, _config.default)(undefined || 'testnet');
-  const solutionHash = await (0, _utils.viewMethodOnContract)(nearConfig, 'get_solution', '{"puzzle_index": 0}');
+  const chainData = await (0, _utils.viewMethodOnContract)(nearConfig, 'get_unsolved_puzzles', '{}');
+  let data;
+  let solutionHash; // There may not be any crossword puzzles to solve, check this.
+
+  if (chainData.puzzles.length) {
+    solutionHash = chainData.puzzles[0]['solution_hash'];
+    data = (0, _utils.mungeBlockchainCrossword)(chainData.puzzles);
+  } else {
+    console.log("Oof, there's no crossword to play right now, friend.");
+  }
+
   return {
-    data: _hardcodedData.data,
+    data,
     solutionHash
   };
 }
@@ -50729,7 +50797,7 @@ initCrossword().then(({
     solutionHash: solutionHash
   }), document.getElementById('root'));
 });
-},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","./App":"App.js","./config.js":"config.js","./utils":"utils.js","./hardcoded-data":"hardcoded-data.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","./App":"App.js","./config.js":"config.js","./utils":"utils.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -50757,7 +50825,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63670" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53515" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
