@@ -136,7 +136,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "crossword-tutorial-chapter-1"
+name = "crossword-tutorial-chapter-2"
 version = "0.1.0"
 dependencies = [
  "hex",

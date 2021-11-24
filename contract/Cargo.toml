@@ -1,5 +1,5 @@
 [package]
-name = "crossword-tutorial-chapter-1"
+name = "crossword-tutorial-chapter-2"
 version = "0.1.0"
 authors = ["Near Inc <hello@near.org>", "Mike Purvis <mike@near.org>"]
 edition = "2018"
