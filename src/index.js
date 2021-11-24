@@ -2,12 +2,22 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import getConfig from './config.js';
-import { viewMethodOnContract } from './utils';
-import { data } from './hardcoded-data';
+import { viewMethodOnContract, mungeBlockchainCrossword } from './utils';
 
 async function initCrossword() {
   const nearConfig = getConfig(process.env.NEAR_ENV || 'testnet');
-  const solutionHash = await viewMethodOnContract(nearConfig, 'get_solution', '{"puzzle_index": 0}');
+  const chainData = await viewMethodOnContract(nearConfig, 'get_unsolved_puzzles', '{}');
+
+  let data;
+  let solutionHash;
+
+  // There may not be any crossword puzzles to solve, check this.
+  if (chainData.puzzles.length) {
+    solutionHash = chainData.puzzles[0]['solution_hash'];
+    data = mungeBlockchainCrossword(chainData.puzzles);
+  } else {
+    console.log("Oof, there's no crossword to play right now, friend.");
+  }
   return { data, solutionHash };
 }
 

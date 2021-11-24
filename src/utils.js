@@ -71,7 +71,29 @@ function parseSolutionSeedPhrase(data, gridData) {
   };
 */
 
+function mungeBlockchainCrossword(chainData) {
+  const data = {
+    across: {},
+    down: {}
+  };
+  // Assume there is only one crossword puzzle, get the first
+  const crosswordClues = chainData[0].answer;
+
+  crosswordClues.forEach((clue) => {
+    // In the smart contract it's stored as "Across" but the
+    // React library uses "across"
+    const direction = clue.direction.toLowerCase();
+    data[direction][clue.num] = {};
+    data[direction][clue.num]['clue'] = clue.clue;
+    data[direction][clue.num]['answer'] = '?'.repeat(clue.length);
+    data[direction][clue.num]['row'] = clue.start.y;
+    data[direction][clue.num]['col'] = clue.start.x;
+  });
+  return data;
+}
+
 module.exports = {
   viewMethodOnContract,
-  parseSolutionSeedPhrase
+  parseSolutionSeedPhrase,
+  mungeBlockchainCrossword
 };
