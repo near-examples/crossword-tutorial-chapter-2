@@ -3,7 +3,7 @@ use near_sdk::{
     borsh::{self, BorshDeserialize, BorshSerialize},
     log,
     serde::{Deserialize, Serialize},
-    PanicOnDefault, Promise,
+    AccountId, PanicOnDefault, Promise,
 };
 use near_sdk::{env, near_bindgen};
 
@@ -73,6 +73,7 @@ pub struct Puzzle {
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Crossword {
+    owner_id: AccountId,
     puzzles: LookupMap<String, Puzzle>,
     unsolved_puzzles: UnorderedSet<String>,
 }
@@ -80,8 +81,9 @@ pub struct Crossword {
 #[near_bindgen]
 impl Crossword {
     #[init]
-    pub fn new() -> Self {
+    pub fn new(owner_id: AccountId) -> Self {
         Self {
+            owner_id,
             puzzles: LookupMap::new(b"c"),
             unsolved_puzzles: UnorderedSet::new(b"u"),
         }
@@ -249,11 +251,11 @@ mod tests {
         // Get Alice as an account ID
         let alice = AccountId::new_unchecked("alice.testnet".to_string());
         // Set up the testing context and unit test environment
-        let context = get_context(alice);
+        let context = get_context(alice.clone());
         testing_env!(context.build());
 
         // Set up contract object and call the new method
-        let mut contract = Crossword::new();
+        let mut contract = Crossword::new(alice);
         // Add puzzle
         let answers = get_answers();
         contract.new_puzzle(
@@ -268,11 +270,11 @@ mod tests {
         // Get Alice as an account ID
         let alice = AccountId::new_unchecked("alice.testnet".to_string());
         // Set up the testing context and unit test environment
-        let context = get_context(alice);
+        let context = get_context(alice.clone());
         testing_env!(context.build());
 
         // Set up contract object
-        let mut contract = Crossword::new();
+        let mut contract = Crossword::new(alice);
 
         // Add puzzle
         let answers = get_answers();
