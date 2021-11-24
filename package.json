@@ -6,6 +6,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "bs58": "^4.0.1",
     "js-sha256": "^0.9.0",
     "near-api-js": "^0.42.0",
     "react": "^16.13.1",

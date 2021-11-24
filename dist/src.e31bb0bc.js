@@ -50425,9 +50425,14 @@ __exportStar(require("./browser-connect"), exports);
 require("error-polyfill");
 
 },{"./key_stores/browser-index":"../node_modules/near-api-js/lib/key_stores/browser-index.js","./common-index":"../node_modules/near-api-js/lib/common-index.js","./browser-connect":"../node_modules/near-api-js/lib/browser-connect.js","error-polyfill":"../node_modules/error-polyfill/index.js"}],"utils.js":[function(require,module,exports) {
+var Buffer = require("buffer").Buffer;
 "use strict";
 
 var nearAPI = _interopRequireWildcard(require("near-api-js"));
+
+var _bs = _interopRequireDefault(require("bs58"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
@@ -50438,10 +50443,13 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
 // Opportunity to enhance the library so this isn't necessary.
 // Our API could be improved here :)
 // See: https://github.com/near/near-api-js/issues/612
-async function viewMethodOnContract(nearConfig, method) {
-  const provider = new nearAPI.providers.JsonRpcProvider(nearConfig.nodeUrl);
-  const rawResult = await provider.query(`call/${nearConfig.contractName}/${method}`, 'AQ4'); // Base 58 of '{}'
+async function viewMethodOnContract(nearConfig, method, params) {
+  const paramBytes = Buffer.from(params, 'utf8');
 
+  const base58Params = _bs.default.encode(paramBytes);
+
+  const provider = new nearAPI.providers.JsonRpcProvider(nearConfig.nodeUrl);
+  const rawResult = await provider.query(`call/${nearConfig.contractName}/${method}`, base58Params);
   return JSON.parse(rawResult.result.map(x => String.fromCharCode(x)).join(''));
 }
 
@@ -50509,7 +50517,7 @@ module.exports = {
   viewMethodOnContract,
   parseSolutionSeedPhrase
 };
-},{"near-api-js":"../node_modules/near-api-js/lib/browser-index.js"}],"App.js":[function(require,module,exports) {
+},{"near-api-js":"../node_modules/near-api-js/lib/browser-index.js","bs58":"../node_modules/bs58/index.js","buffer":"../node_modules/buffer/index.js"}],"App.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -50583,7 +50591,7 @@ const App = ({
 var _default = App;
 exports.default = _default;
 },{"./App.css":"App.css","react":"../node_modules/react/index.js","react-crossword-near":"../node_modules/react-crossword-near/dist/es/index.js","./utils":"utils.js","react-crossword-near/dist/es/util":"../node_modules/react-crossword-near/dist/es/util.js","js-sha256":"../node_modules/js-sha256/src/sha256.js"}],"config.js":[function(require,module,exports) {
-const CONTRACT_NAME = "chap1.demo.testnet" || 'your-crossword-account.testnet';
+const CONTRACT_NAME = "xword.demo.testnet" || 'your-crossword-account.testnet';
 
 function getConfig(env) {
   switch (env) {
@@ -50705,7 +50713,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 async function initCrossword() {
   const nearConfig = (0, _config.default)(undefined || 'testnet');
-  const solutionHash = await (0, _utils.viewMethodOnContract)(nearConfig, 'get_solution');
+  const solutionHash = await (0, _utils.viewMethodOnContract)(nearConfig, 'get_solution', '{"puzzle_index": 0}');
   return {
     data: _hardcodedData.data,
     solutionHash
@@ -50749,7 +50757,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50502" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63670" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
