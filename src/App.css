@@ -82,3 +82,25 @@ span.important {
     margin: 0 auto;
     width: 576px;
 }
+
+button, .highlight {
+    border-radius: 5px;
+    border: 0.1em solid #262626;
+    padding: 0.5em 1em;
+}
+
+button:hover, button:focus, button:focus-within, .highlight:hover, .highlight:focus, .highlight:focus-within {
+    border-color: #5F8AFA;
+}
+
+#login {
+    text-align: right;
+}
+
+button {
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    outline: none;
+}
