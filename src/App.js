@@ -47,7 +47,7 @@ const App = ({ data, hash, nearConfig, walletConnection, currentUser }) => {
         methodName: 'submit_solution',
         args: {solution_hash: seedPhrase, memo: "Yay I won!"},
         gas: DEFAULT_FUNCTION_CALL_GAS, // optional param, by the way
-        attachedDeposit: 0, // Note we don't attach deposit, the 5 Ⓝ comes from the contract at this point
+        attachedDeposit: 0,
         walletMeta: '', // optional param, by the way
         walletCallbackUrl: '' // optional param, by the way
       });

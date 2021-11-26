@@ -4,7 +4,6 @@ import * as nearAPI from 'near-api-js';
 import App from './App';
 import getConfig from './config.js';
 import { viewMethodOnContract, mungeBlockchainCrossword } from './utils';
-import {DEFAULT_FUNCTION_CALL_GAS} from "near-api-js/src/constants";
 
 async function initCrossword() {
   const nearConfig = getConfig(process.env.NEAR_ENV || 'testnet');

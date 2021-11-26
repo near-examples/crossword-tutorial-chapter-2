@@ -89,8 +89,8 @@ impl Crossword {
         }
     }
 
-    pub fn submit_solution(&mut self, solution_hash: String, memo: String) {
-        let hashed_input = env::sha256(solution_hash.as_bytes());
+    pub fn submit_solution(&mut self, solution: String, memo: String) {
+        let hashed_input = env::sha256(solution.as_bytes());
         let hashed_input_hex = hex::encode(&hashed_input);
 
         // Check to see if the hashed answer is among the puzzles
