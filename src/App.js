@@ -65,7 +65,9 @@ const App = ({ data, hash, nearConfig, walletConnection, currentUser }) => {
   const signIn = () => {
     walletConnection.requestSignIn(
       nearConfig.contractName,
-      'NEAR Guest Book'
+      '', // title. Optional, by the way
+      '', // successUrl. Optional, by the way
+      '', // failureUrl. Optional, by the way
     );
   };
 
