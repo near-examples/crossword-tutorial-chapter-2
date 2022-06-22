@@ -24,4 +24,4 @@ yarn-error.log*
 
 # Rust smart contract
 contract/target
-**/Cargo.lock
+Cargo.lock
