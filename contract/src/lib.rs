@@ -1,25 +1,22 @@
 use near_sdk::collections::{LookupMap, UnorderedSet};
 use near_sdk::{
-    borsh::{self, BorshDeserialize, BorshSerialize},
     log,
-    serde::{Deserialize, Serialize},
+    NearToken,
     AccountId, PanicOnDefault, Promise,
 };
-use near_sdk::{env, near_bindgen};
+use near_sdk::{env, near};
 
 // 5 Ⓝ in yoctoNEAR
 const PRIZE_AMOUNT: u128 = 5_000_000_000_000_000_000_000_000;
 
-#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
-#[serde(crate = "near_sdk::serde")]
+#[near(serializers = [borsh, json])]
 pub enum AnswerDirection {
     Across,
     Down,
 }
 
 /// The origin (0,0) starts at the top left side of the square
-#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
-#[serde(crate = "near_sdk::serde")]
+#[near(serializers = [borsh, json])]
 pub struct CoordinatePair {
     x: u8,
     y: u8,
@@ -27,8 +24,7 @@ pub struct CoordinatePair {
 
 // {"num": 1, "start": {"x": 19, "y": 31}, "direction": "Across", "length": 8, "clue": "not far but"}
 // We'll have the clue stored on-chain for now for simplicity.
-#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
-#[serde(crate = "near_sdk::serde")]
+#[near(serializers = [borsh, json])]
 pub struct Answer {
     num: u8,
     start: CoordinatePair,
@@ -37,21 +33,18 @@ pub struct Answer {
     clue: String,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
-#[serde(crate = "near_sdk::serde")]
+#[near(serializers = [borsh, json])]
 pub enum PuzzleStatus {
     Unsolved,
     Solved { memo: String },
 }
 
-#[derive(Serialize)]
-#[serde(crate = "near_sdk::serde")]
+#[near(serializers = [borsh, json])]
 pub struct UnsolvedPuzzles {
     puzzles: Vec<JsonPuzzle>,
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
+#[near(serializers = [borsh, json])]
 pub struct JsonPuzzle {
     /// The human-readable (not in bytes) hash of the solution
     solution_hash: String,
@@ -59,7 +52,7 @@ pub struct JsonPuzzle {
     answer: Vec<Answer>,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug)]
+#[near(serializers = [borsh])]
 pub struct Puzzle {
     status: PuzzleStatus,
     /// Use the CoordinatePair assuming the origin is (0, 0) in the top left side of the puzzle.
@@ -70,15 +63,15 @@ pub struct Puzzle {
 /// When you want to have a "new" function initialize a smart contract,
 /// you'll likely want to follow this pattern of having a default implementation that panics,
 /// directing the user to call the initialization method. (The one with the #[init] macro)
-#[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+#[near(contract_state)]
+#[derive(PanicOnDefault)]
 pub struct Crossword {
     owner_id: AccountId,
     puzzles: LookupMap<String, Puzzle>,
     unsolved_puzzles: UnorderedSet<String>,
 }
 
-#[near_bindgen]
+#[near]
 impl Crossword {
     #[init]
     pub fn new(owner_id: AccountId) -> Self {
@@ -120,7 +113,7 @@ impl Crossword {
         );
 
         // Transfer the prize money to the winner
-        Promise::new(env::predecessor_account_id()).transfer(PRIZE_AMOUNT);
+        Promise::new(env::predecessor_account_id()).transfer(NearToken::from_yoctonear(PRIZE_AMOUNT));
     }
 
     /// Get the hash of a crossword puzzle solution from the unsolved_puzzles
@@ -254,7 +247,7 @@ mod tests {
     #[should_panic(expected = "ERR_NOT_CORRECT_ANSWER")]
     fn check_submit_solution_failure() {
         // Get Alice as an account ID
-        let alice = AccountId::new_unchecked("alice.testnet".to_string());
+        let alice: AccountId = "alice.testnet".parse().unwrap();
         // Set up the testing context and unit test environment
         let context = get_context(alice.clone());
         testing_env!(context.build());
@@ -273,7 +266,7 @@ mod tests {
     #[test]
     fn check_submit_solution_success() {
         // Get Alice as an account ID
-        let alice = AccountId::new_unchecked("alice.testnet".to_string());
+        let alice: AccountId = "alice.testnet".parse().unwrap();
         // Set up the testing context and unit test environment
         let context = get_context(alice.clone());
         testing_env!(context.build());
