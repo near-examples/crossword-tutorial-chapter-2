@@ -7,7 +7,7 @@ use near_sdk::{
 use near_sdk::{env, near};
 
 // 5 Ⓝ in yoctoNEAR
-const PRIZE_AMOUNT: u128 = 5_000_000_000_000_000_000_000_000;
+const PRIZE_AMOUNT: NearToken = NearToken::from_yoctonear(5_000_000_000_000_000_000_000_000);
 
 #[near(serializers = [borsh, json])]
 pub enum AnswerDirection {
@@ -113,7 +113,7 @@ impl Crossword {
         );
 
         // Transfer the prize money to the winner
-        Promise::new(env::predecessor_account_id()).transfer(NearToken::from_yoctonear(PRIZE_AMOUNT));
+        Promise::new(env::predecessor_account_id()).transfer(PRIZE_AMOUNT);
     }
 
     /// Get the hash of a crossword puzzle solution from the unsolved_puzzles
